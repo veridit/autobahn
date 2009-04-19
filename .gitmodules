@@ -4,3 +4,6 @@
 [submodule "vendor/plugins/schema_validations"]
 	path = vendor/plugins/schema_validations
 	url = git://github.com/veridit/schema_validations.git
+[submodule "vendor/plugins/restful_transactions"]
+	path = vendor/plugins/restful_transactions
+	url = git://github.com/veridit/restful_transactions.git
