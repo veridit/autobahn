@@ -22,3 +22,6 @@
 [submodule "vendor/plugins/record_select"]
 	path = vendor/plugins/record_select
 	url = git://github.com/veridit/record_select.git
+[submodule "vendor/plugins/active_scaffold"]
+	path = vendor/plugins/active_scaffold
+	url = git://github.com/veridit/active_scaffold.git
