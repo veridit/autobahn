@@ -7,3 +7,6 @@
 [submodule "vendor/plugins/restful_transactions"]
 	path = vendor/plugins/restful_transactions
 	url = git://github.com/veridit/restful_transactions.git
+[submodule "vendor/plugins/redhillonrails_core"]
+	path = vendor/plugins/redhillonrails_core
+	url = git://github.com/veridit/redhillonrails_core.git
