@@ -16,3 +16,6 @@
 [submodule "vendor/plugins/foreign_key_associations"]
 	path = vendor/plugins/foreign_key_associations
 	url = git://github.com/veridit/foreign_key_associations.git
+[submodule "vendor/plugins/annotate_models"]
+	path = vendor/plugins/annotate_models
+	url = git://github.com/veridit/annotate_models.git
