@@ -19,3 +19,6 @@
 [submodule "vendor/plugins/annotate_models"]
 	path = vendor/plugins/annotate_models
 	url = git://github.com/veridit/annotate_models.git
+[submodule "vendor/plugins/record_select"]
+	path = vendor/plugins/record_select
+	url = git://github.com/veridit/record_select.git
