@@ -1,3 +1,6 @@
 [submodule "vendor/plugins/system_settings"]
 	path = vendor/plugins/system_settings
 	url = git://github.com/veridit/system_settings.git
+[submodule "vendor/plugins/schema_validations"]
+	path = vendor/plugins/schema_validations
+	url = git://github.com/veridit/schema_validations.git
