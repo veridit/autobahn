@@ -13,3 +13,6 @@
 [submodule "vendor/plugins/foreign_key_migrations"]
 	path = vendor/plugins/foreign_key_migrations
 	url = git://github.com/veridit/foreign_key_migrations.git
+[submodule "vendor/plugins/foreign_key_associations"]
+	path = vendor/plugins/foreign_key_associations
+	url = git://github.com/veridit/foreign_key_associations.git
