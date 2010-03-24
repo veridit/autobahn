@@ -25,3 +25,6 @@
 [submodule "vendor/plugins/active_scaffold"]
 	path = vendor/plugins/active_scaffold
 	url = git://github.com/veridit/active_scaffold.git
+[submodule "vendor/plugins/calendar_date_select"]
+	path = vendor/plugins/calendar_date_select
+	url = git://github.com/veridit/calendar_date_select.git
