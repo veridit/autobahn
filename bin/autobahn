@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+path = File.join(File.dirname(__FILE__), 'commands.rb')
+
+unless File.exists?(path)
+  repo = ENV['AUTOBAHN_REPOSITORY'] || File.expand_path("~/.autobahn/repository")
+  unless File.exists?(repo)
+    if %x{git config user.email}.chomp.match(/@veridit.no$/)
+      origin = 'git@github.com:veridit/autobahn.git' # read/write
+    else
+      origin = 'git://github.com/veridit/autobahn.git' # read-only
+    end
+    system 'git', 'clone', origin, repo
+  end
+  path = File.join(repo, 'bin', 'commands.rb')
+end
+
+exec('ruby', path, *ARGV)
