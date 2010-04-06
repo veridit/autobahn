@@ -96,7 +96,7 @@ command :upgrade do |command|
     if File.exists?('.autobahn/revision')
       revision = File.read('.autobahn/revision').chomp
       Dir.chdir(autobahn_repo) do
-        applied += %{git ls-tree --name-only #{revision} #{templates_path}}.split("\n")
+        applied += %x{git ls-tree --name-only #{revision} #{templates_path}}.split("\n")
       end
     end
 
@@ -104,7 +104,7 @@ command :upgrade do |command|
     if options.all
       pending = Dir.entries(templates_path).reject{|n| n.match(/^\.\.?$/)} - applied
     else
-      pending = Dir.chdir(autobahn_repo){%{git ls-tree --name-only #{revision} #{templates_path}}.split("\n")} - applied
+      pending = Dir.chdir(autobahn_repo){%x{git ls-tree --name-only #{revision} #{templates_path}}.split("\n")} - applied
     end
 
     if pending.any?
