@@ -51,6 +51,9 @@ command "generate template" do |command|
       end
       puts "Created #{path}"
     end
+    puts
+    puts File.read(File.join(templates_path, 'README'))
+    puts
   end
 end
 
