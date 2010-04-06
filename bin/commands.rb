@@ -80,12 +80,13 @@ command :upgrade do |command|
   command.option '--branch BRANCH', 'Run the upgrade in the given branch. Defaults to "autobahn"'
   command.option '-f', '--force', "Run the upgrade even if the upgrade branch already exists"
   command.action do |args, options|
+    initialized =  Dir.entries('.').length != 2
     options.default :force => false, :branch => "autobahn"
-    options.default :merge => %x{git branch}.match(/^. #{options.branch}/m)
-    if not File.exists? "vendor/rails"
+    options.default :merge => (not initialized or %x{git branch}.match(/^. #{options.branch}/m))
+    if initialized and not File.exists? "vendor/rails"
       STDERR.puts "Autobahn upgrade must be run from the top of your project directory"
       exit 1
-    elsif system('git', 'status')
+    elsif initialized and system('git', 'status')
       # TODO: Hide output from git st
       STDERR.puts "There are uncommitted changes. Commit your changes before upgrading."
       exit 1
@@ -104,25 +105,29 @@ command :upgrade do |command|
     if options.all
       pending = Dir.entries(templates_path).reject{|n| n.match(/^\.\.?$/)} - applied
     else
-      pending = Dir.chdir(autobahn_repo){%x{git ls-tree --name-only #{revision} #{templates_path}}.split("\n")} - applied
+      pending = Dir.chdir(autobahn_repo){%x{git ls-tree --name-only -r #{revision} #{templates_path}}.split("\n")}.map{|p| File.basename(p)} - applied
     end
 
     if pending.any?
-      merge_branch = %x{git branch}.match(/^\* ([^ \n]+)/m).captures.first
-      if not %x{git branch}.match(/^\* #{options.branch}/m) # The upgrade branch is not currently checked out
-        if %x{git branch}.match(/^  #{options.branch}/m) # The upgrade branch exists
-          if options.force
-            system('git', 'checkout', options.branch)
-          else
-            STDERR.puts "The branch #{options.branch.inspect} already exists. Use --force to upgrade in it anyway"
-            exit 1
+      if initialized
+        merge_branch = %x{git branch}.match(/^\* ([^ \n]+)/m).captures.first
+        if not %x{git branch}.match(/^\* #{options.branch}/m) # The upgrade branch is not currently checked out
+          if %x{git branch}.match(/^  #{options.branch}/m) # The upgrade branch exists
+            if options.force
+              system('git', 'checkout', options.branch)
+            else
+              STDERR.puts "The branch #{options.branch.inspect} already exists. Use --force to upgrade in it anyway"
+              exit 1
+            end
+          else # The upgrade branch does not exist
+            system('git', 'checkout', '-b', options.branch)
           end
-        else # The upgrade branch does not exist
-          system('git', 'checkout', '-b', options.branch)
+        elsif not options.force
+          STDERR.puts "The branch #{options.branch.inspect} exists and is checked out. Use --force to upgrade in it"
+          exit 1
         end
-      elsif not options.force
-        STDERR.puts "The branch #{options.branch.inspect} exists and is checked out. Use --force to upgrade in it"
-        exit 1
+      else
+        merge_branch = "master"
       end
 
       pending.sort.each do |template|
@@ -147,7 +152,7 @@ command :upgrade do |command|
       end
     else
       puts "All autobahn templates have been applied."
-      unless options.all
+      unless (options.all or initialized)
         puts "Use the --all flag if you want to apply uncommitted templates."
       end
     end
