@@ -132,7 +132,16 @@ command :upgrade do |command|
 
       pending.sort.each do |template|
         template = File.join(templates_path, template)
-        puts "Applying upgrade template #{template}"
+        if not defined? Rails and File.exists?('vendor/rails')
+          # Configure rails
+          require './vendor/rails/railties/lib/rails_generator/generators/applications/app/template_runner'
+        end
+        if defined? Rails
+          Rails::TemplateRunner.new(template)
+        else
+          puts "Applying upgrade template #{template}"
+          eval(open(template).read, nil, template)
+        end
       end
       FileUtils.makedirs('.autobahn')
       File.open('.autobahn/revision', 'w') do |file|
