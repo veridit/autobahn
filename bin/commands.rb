@@ -59,7 +59,7 @@ command "generate template" do |command|
     name = args.first || ask("What should the template be named? ")
     slug = name.downcase.gsub(/[^a-z0-9]+/, '_').split('_').join('_')
     templates_path = File.join(autobahn_repo, 'templates')
-    if existing = Dir.entries(templates_path).select{|name| name.match(/^[0-9]+_#{slug}\.rb$/)}.first
+    if existing = Dir.entries(templates_path).select{|n| n.match(/^[0-9]+_#{slug}\.rb$/)}.first
       puts "A template with that name already exists: #{File.join(templates_path, existing)}"
     else
       timestamp = DateTime.now.strftime('%Y%m%d%H%M%S')
