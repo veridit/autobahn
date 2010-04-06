@@ -134,7 +134,9 @@ command :upgrade do |command|
       message = "Upgraded to autobahn #{autobahn_tag}"
       system 'git', 'commit', '-m', message
       puts message
-      if options.merge and options.branch != merge_branch
+      if !initialized
+        # We're already on the master branch. No need to merge or switch branches
+      elsif options.merge and options.branch != merge_branch
         system('git', 'checkout', merge_branch)
         system('git', 'merge', '--ff', '-q', options.branch)
         system('git', 'branch', '-d', options.branch)
