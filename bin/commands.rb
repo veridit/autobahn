@@ -71,3 +71,71 @@ command "generate template" do |command|
     end
   end
 end
+
+command :upgrade do |command|
+  command.syntax = 'upgrade'
+  command.description = "Run pending autobahn upgrade templates"
+  command.option '-a', '--all', "Run uncommitted autobahn templates"
+  command.option '--no-merge', "Don't merge the upgrade commits from the autobahn to master"
+  command.action do |args, options|
+    if not File.exists? "vendor/rails"
+      STDERR.puts "Autobahn upgrade must be run from the top of your project directory"
+      exit 1
+    elsif system('git', 'status')
+      # TODO: Hide output from git st
+      STDERR.puts "There are uncommitted changes. Commit your changes before upgrading."
+      exit 1
+    elsif not %x{git branch}.match(/^\* master/m)
+      STDERR.puts "The master branch must be checked out."
+      exit 1
+    elsif %x{git branch}.match(/^. autobahn/m)
+      STDERR.puts "There already exists an autobahn branch. Dispose of it before upgrading."
+      exit 1
+    end
+
+    templates_path = File.join(autobahn_repo, 'templates')
+    applied = []
+    if File.exists?('.autobahn/revision')
+      revision = File.read('.autobahn/revision').chomp
+      Dir.chdir(autobahn_repo) do
+        applied += %{git ls-tree --name-only #{revision} #{templates_path}}.split("\n")
+      end
+    end
+
+    revision = Dir.chdir(autobahn_repo){%x{git rev-parse HEAD}}.chomp
+    if options.all
+      pending = Dir.entries(templates_path).reject{|n| n.match(/^\.\.?$/)} - applied
+    else
+      pending = Dir.chdir(autobahn_repo){%{git ls-tree --name-only #{revision} #{templates_path}}.split("\n")} - applied
+    end
+
+    if pending.any?
+      system('git', 'checkout', '-b', 'autobahn')
+      pending.sort.each do |template|
+        template = File.join(templates_path, template)
+        puts "Applying upgrade template #{template}"
+      end
+      FileUtils.makedirs('.autobahn')
+      File.open('.autobahn/revision', 'w') do |file|
+        file.puts revision
+      end
+      system 'git', 'add', '.autobahn/revision'
+      autobahn_tag = Dir.chdir(autobahn_repo){%x{git name-rev --name-only --no-undefined --tags --always #{revision}}}
+      message = "Upgraded to autobahn #{autobahn_tag}"
+      system 'git', 'commit', '-m', message
+      puts message
+      if options.merge
+        system('git', 'checkout', 'master')
+        system('git', 'merge', '--ff', 'autobahn')
+        system('git', 'branch', '-d', 'autobahn')
+      else
+        puts "Leaving upgrade commits in the autobahn branch."
+      end
+    else
+      puts "All autobahn templates have been applied."
+      unless options.all
+        puts "Use the --all flag if you want to apply uncommitted templates."
+      end
+    end
+  end
+end
