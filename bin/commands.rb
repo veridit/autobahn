@@ -24,7 +24,7 @@ command :init do |command|
       project_path = File.expand_path(args.first)
     end
 
-    if File.exists?(File.join(project_path, '.autobahn_revision'))
+    if File.exists?(File.join(project_path, '.autobahn/revision'))
       puts "#{project_path} has already been initialized."
       exit
     end
