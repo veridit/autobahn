@@ -82,7 +82,7 @@ command :upgrade do |command|
     if File.exists?('.autobahn/revision')
       revision = File.read('.autobahn/revision').chomp
       Dir.chdir(autobahn_repo) do
-        applied += %x{git ls-tree --name-only #{revision} #{templates_path}}.split("\n")
+        applied += %x{git ls-tree --name-only -r #{revision} #{templates_path}}.split("\n").map{|p| File.basename(p)}
       end
     end
 
