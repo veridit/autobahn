@@ -2,7 +2,7 @@ require 'rubygems'
 require 'commander/import'
 
 program :name, 'autobahn'
-program :version, File.read(File.join(File.dirname(__FILE__), '..', 'VERSION')).chomp
+program :version, %x{git describe --tag}.chomp.sub(/^v/, '')
 program :description, 'Enterprise Ruby on Rails'
 
 autobahn_repo = File.expand_path(File.join(File.dirname(__FILE__), '..'))

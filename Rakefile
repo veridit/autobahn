@@ -1,6 +1,6 @@
 require 'rake/clean'
 
-CLEAN << "autobahn-#{File.read('VERSION').chomp}.gem"
+CLOBBER << Rake::FileList["autobahn-*.gem"]
 
 task :gem do
   sh 'gem', 'build', 'autobahn.gemspec'

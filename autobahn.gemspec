@@ -1,7 +1,7 @@
 Gem::Specification.new do |spec|
   spec.platform    = Gem::Platform::RUBY
   spec.name        = 'autobahn'
-  spec.version     = File.read(File.join(File.dirname(__FILE__), 'VERSION')).chomp
+  spec.version     = %x{git describe --tag}.chomp.sub(/^v/, '')
   spec.summary     = 'Enterprise Ruby on Rails'
 
   spec.authors     = ['Matias Hermanrud Fjeld', 'Jørgen Hermanrud Fjeld']
