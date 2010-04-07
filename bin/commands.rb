@@ -116,6 +116,7 @@ command :upgrade do |command|
         merge_branch = "master"
       end
 
+      project_dir = Dir.pwd
       pending.sort.each do |template|
         template = File.join(templates_path, template)
         if not defined? Rails and File.exists?('vendor/rails')
@@ -128,6 +129,7 @@ command :upgrade do |command|
           puts "Applying upgrade template #{template}"
           eval(open(template).read, nil, template)
         end
+        Dir.chdir project_dir # in case the template changed the current directory
       end
       FileUtils.makedirs('.autobahn')
       File.open('.autobahn/revision', 'w') do |file|

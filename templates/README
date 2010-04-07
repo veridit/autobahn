@@ -2,8 +2,6 @@ Templates are required to:
 
   * Not switch branches or perform operations across branches
 
-  * Not change the working directory other than temporarily
-
   * Add and commit any changes it makes
 
 Templates are executed in the same way as regular rails templates,
