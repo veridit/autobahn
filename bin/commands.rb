@@ -92,6 +92,7 @@ command :upgrade do |command|
     else
       pending = Dir.chdir(autobahn_repo){%x{git ls-tree --name-only -r #{revision} #{templates_path}}.split("\n")}.map{|p| File.basename(p)} - applied
     end
+    pending.reject!{|n| !n.match(/\.rb$/)}
 
     if pending.any?
       if initialized
