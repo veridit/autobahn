@@ -8,6 +8,13 @@ program :name, 'autobahn'
 program :version, Dir.chdir(autobahn_repo){capture("git describe --tag")}.chomp.sub(/^v/, '')
 program :description, 'Enterprise Ruby on Rails'
 
+def run(*args)
+  system(*args)
+  if $?.exitstatus != 0
+    raise "Child process exited with status #{$?.exitstatus}"
+  end
+end
+
 command :init do |command|
   command.syntax = "init [options] <directory>"
   command.description = "Initialize an autobahn project"
@@ -101,13 +108,13 @@ command :upgrade do |command|
         if not capture("git branch").match(/^\* #{options.branch}/m) # The upgrade branch is not currently checked out
           if capture("git branch").match(/^  #{options.branch}/m) # The upgrade branch exists
             if options.force
-              system('git', 'checkout', options.branch)
+              run('git', 'checkout', options.branch)
             else
               STDERR.puts "The branch #{options.branch.inspect} already exists. Use --force to upgrade in it anyway"
               exit 1
             end
           else # The upgrade branch does not exist
-            system('git', 'checkout', '-b', options.branch)
+            run('git', 'checkout', '-b', options.branch)
           end
         elsif not options.force
           STDERR.puts "The branch #{options.branch.inspect} exists and is checked out. Use --force to upgrade in it"
@@ -136,17 +143,17 @@ command :upgrade do |command|
       File.open('.autobahn/revision', 'w') do |file|
         file.puts revision
       end
-      system 'git', 'add', '.autobahn/revision'
+      run 'git', 'add', '.autobahn/revision'
       autobahn_tag = Dir.chdir(autobahn_repo){capture("git describe --tags #{revision}")}
       message = "Upgraded to autobahn #{autobahn_tag}"
-      system 'git', 'commit', '-m', message
+      run 'git', 'commit', '-m', message
       puts message
       if !initialized
         # We're already on the master branch. No need to merge or switch branches
       elsif options.merge and options.branch != merge_branch
-        system('git', 'checkout', merge_branch)
-        system('git', 'merge', '--ff', '-q', options.branch)
-        system('git', 'branch', '-d', options.branch)
+        run('git', 'checkout', merge_branch)
+        run('git', 'merge', '--ff', '-q', options.branch)
+        run('git', 'branch', '-d', options.branch)
       else
         puts "Leaving upgrade commits in the #{options.branch} branch."
       end
