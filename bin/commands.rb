@@ -137,7 +137,7 @@ command :upgrade do |command|
         file.puts revision
       end
       system 'git', 'add', '.autobahn/revision'
-      autobahn_tag = Dir.chdir(autobahn_repo){capture("git name-rev --name-only --no-undefined --tags --always #{revision}")}
+      autobahn_tag = Dir.chdir(autobahn_repo){capture("git describe --tags #{revision}")}
       message = "Upgraded to autobahn #{autobahn_tag}"
       system 'git', 'commit', '-m', message
       puts message
