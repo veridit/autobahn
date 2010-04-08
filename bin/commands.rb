@@ -1,11 +1,12 @@
 require 'rubygems'
 require 'commander/import'
-
-program :name, 'autobahn'
-program :version, %x{git describe --tag}.chomp.sub(/^v/, '')
-program :description, 'Enterprise Ruby on Rails'
+require File.join(File.dirname(__FILE__), '..', 'lib', 'capture')
 
 autobahn_repo = File.expand_path(File.join(File.dirname(__FILE__), '..'))
+
+program :name, 'autobahn'
+program :version, Dir.chdir(autobahn_repo){capture("git describe --tag")}.chomp.sub(/^v/, '')
+program :description, 'Enterprise Ruby on Rails'
 
 command :init do |command|
   command.syntax = "init [options] <directory>"
@@ -67,12 +68,12 @@ command :upgrade do |command|
   command.action do |args, options|
     initialized =  Dir.entries('.').length != 2
     options.default :force => false, :branch => "autobahn"
-    options.default :merge => (not initialized or %x{git branch}.match(/^. #{options.branch}/m))
+    options.default :merge => (not initialized or capture("git branch").match(/^. #{options.branch}/m))
     if initialized and not File.exists? "vendor/rails"
       STDERR.puts "Autobahn upgrade must be run from the top of your project directory"
       exit 1
-    elsif initialized and system('git', 'status')
-      # TODO: Hide output from git st
+    elsif initialized and ((capture('git', 'status') and true) rescue false)
+      # git status exists with a nonzero status if there is nothing to commit
       STDERR.puts "There are uncommitted changes. Commit your changes before upgrading."
       exit 1
     end
@@ -82,23 +83,23 @@ command :upgrade do |command|
     if File.exists?('.autobahn/revision')
       revision = File.read('.autobahn/revision').chomp
       Dir.chdir(autobahn_repo) do
-        applied += %x{git ls-tree --name-only -r #{revision} #{templates_path}}.split("\n").map{|p| File.basename(p)}
+        applied += capture("git ls-tree --name-only -r #{revision} #{templates_path}").split("\n").map{|p| File.basename(p)}
       end
     end
 
-    revision = Dir.chdir(autobahn_repo){%x{git rev-parse HEAD}}.chomp
+    revision = Dir.chdir(autobahn_repo){capture("git rev-parse HEAD")}.chomp
     if options.all
       pending = Dir.entries(templates_path).reject{|n| n.match(/^\.\.?$/)} - applied
     else
-      pending = Dir.chdir(autobahn_repo){%x{git ls-tree --name-only -r #{revision} #{templates_path}}.split("\n")}.map{|p| File.basename(p)} - applied
+      pending = Dir.chdir(autobahn_repo){capture("git ls-tree --name-only -r #{revision} #{templates_path}").split("\n")}.map{|p| File.basename(p)} - applied
     end
     pending.reject!{|n| !n.match(/\.rb$/)}
 
     if pending.any?
       if initialized
-        merge_branch = %x{git branch}.match(/^\* ([^ \n]+)/m).captures.first
-        if not %x{git branch}.match(/^\* #{options.branch}/m) # The upgrade branch is not currently checked out
-          if %x{git branch}.match(/^  #{options.branch}/m) # The upgrade branch exists
+        merge_branch = capture("git branch").match(/^\* ([^ \n]+)/m).captures.first
+        if not capture("git branch").match(/^\* #{options.branch}/m) # The upgrade branch is not currently checked out
+          if capture("git branch").match(/^  #{options.branch}/m) # The upgrade branch exists
             if options.force
               system('git', 'checkout', options.branch)
             else
@@ -136,7 +137,7 @@ command :upgrade do |command|
         file.puts revision
       end
       system 'git', 'add', '.autobahn/revision'
-      autobahn_tag = Dir.chdir(autobahn_repo){%x{git name-rev --name-only --no-undefined --tags --always #{revision}}}
+      autobahn_tag = Dir.chdir(autobahn_repo){capture("git name-rev --name-only --no-undefined --tags --always #{revision}")}
       message = "Upgraded to autobahn #{autobahn_tag}"
       system 'git', 'commit', '-m', message
       puts message
