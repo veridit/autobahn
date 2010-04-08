@@ -130,6 +130,9 @@ command :upgrade do |command|
         if not defined? Rails and File.exists?('vendor/rails')
           # Configure rails
           require './vendor/rails/railties/lib/rails_generator/generators/applications/app/template_runner'
+          # Use a double proc to work around namespace-conflicts
+          _run = Proc.new{|*args| run(*args)}
+          Rails::TemplateRunner.send(:define_method, :run){|*args| _run.call(*args)}
         end
         if defined? Rails
           Rails::TemplateRunner.new(template)
