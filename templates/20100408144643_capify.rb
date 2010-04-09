@@ -17,9 +17,11 @@ end
 file "config/deploy.rb" do
   <<-EOS
 set :application, #{project}
+set :user, application
 
 require 'capistrano/ext/multistage'
 
+set :database_user, user
 set :scm, :git
 set :default_shell, "/bin/bash"
 
@@ -30,26 +32,24 @@ ssh_options[:compression] = "none"
 # The use of passenger (mod_rails) obliviates the need for sudo.
 set :use_sudo, false
 
-set :scm_username, application
+set :scm_username, user
 set :repository,  "\#{scm_username}@octo.veridit.no:/home/groups/gits/\#{application}.git"
 
 server "octo.veridit.no", :app, :web, :db, :primary => true
 
 after "deploy:restart" do
   # Fetch the front page to prevent users from getting first slow load.
-  run %{curl -s -o /dev/null 'http://\#{application}.veridit.no/'}
+  run %{curl -s -o /dev/null 'http://\#{rails_env}.\#{application}.veridit.no/'}
 end
 
 EOS
 end
 
-[:development, :staging, :production].each do |stage|
+[:development, :staging, :demo, :production].each do |stage|
   file "config/deploy/#{stage}.rb" do
     <<-EOS
 set :rails_env, "#{stage}"
-set :user,   "\#{application}_\#{rails_env}"
-set :deploy_to, "/home/users/\#{user}"
-set :database_user, user
+set :deploy_to, "/home/users/\#{user}/\#{rails_env}"
 set :default_environment,{"RAILS_ENV"=>rails_env}
 EOS
   end
@@ -65,7 +65,7 @@ namespace :deploy do
   after "deploy:setup" do
     # Remove group writability on home directory, or else ssh refuses
     # to log in using keys
-    run "chmod g-w \#{deploy_to}"
+    run "chmod g-w \#{deploy_to}/.."
   end
 
   before "deploy:finalize_update" do
@@ -97,7 +97,7 @@ namespace :deploy do
   task :restore_from_production, {:restore_from_production => :environment, :roles => :db} do
     #worker.stop
     db.restore_remote_from_dumped_production
-    production_revision = capture("cat ~\#{application}_production/current/REVISION")
+    production_revision = capture("cat ~\#{user}/production/current/REVISION")
     if production_revision != capture("cat \#{current_path}/REVISION")
       ENV['tag'] = production_revision
       find_and_execute_task('deploy')
@@ -116,7 +116,7 @@ task :remote_reset_from_production,{:remote_reset_from_production => :environmen
 #!/bin/bash
 set -e
 cap production db:dump
-COMMAND="cp /home/\#{application}_production/current/tmp/\#{application}_production.pgdump \#{current_path}/tmp/" cap \#{rails_env} invoke
+COMMAND="cp /home/\#{user}/production/current/tmp/\#{application}_production.pgdump \#{current_path}/tmp/" cap \#{rails_env} invoke
 cap \#{rails_env} deploy:web:disable REASON="deployment" UNTIL="when the deployment, including restore of fresh database from production, is done"
 cap \#{rails_env} deploy:restore_from_production
 cap \#{rails_env} deploy:web:enable
