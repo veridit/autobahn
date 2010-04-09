@@ -68,13 +68,13 @@ end
 command :upgrade do |command|
   command.syntax = 'upgrade'
   command.description = "Run pending autobahn upgrade templates"
-  command.option '-a', '--all', "Run uncommitted autobahn templates"
+  command.option '-u', '--uncommitted', "Run uncommitted autobahn templates"
   command.option '-M', '--no-merge', "Don't merge from  the temporary upgrade branch, but leave it checked out"
   command.option '--branch BRANCH', 'Run the upgrade in the given branch. Defaults to "autobahn"'
   command.option '-f', '--force', "Run the upgrade even if the upgrade branch already exists"
   command.action do |args, options|
     initialized =  Dir.entries('.').length != 2
-    options.default :force => false, :branch => "autobahn"
+    options.default :force => false, :branch => "autobahn", :uncommitted => false
     options.default :merge => (not initialized or capture("git branch").match(/^. #{options.branch}/m))
     if initialized and not File.exists? "vendor/rails"
       STDERR.puts "Autobahn upgrade must be run from the top of your project directory"
@@ -95,12 +95,16 @@ command :upgrade do |command|
     end
 
     revision = Dir.chdir(autobahn_repo){capture("git rev-parse HEAD")}.chomp
-    if options.all
-      pending = Dir.entries(templates_path).reject{|n| n.match(/^\.\.?$/)} - applied
-    else
-      pending = Dir.chdir(autobahn_repo){capture("git ls-tree --name-only -r #{revision} #{templates_path}").split("\n")}.map{|p| File.basename(p)} - applied
-    end
+    pending = Dir.chdir(autobahn_repo){capture("git ls-tree --name-only -r #{revision} #{templates_path}").split("\n")}.map{|p| File.basename(p)} - applied
     pending.reject!{|n| !n.match(/\.rb$/)}
+    uncommitted = Dir.entries(templates_path).reject{|n| n.match(/^\.\.?$/) || !n.match(/\.rb$/)} - applied - pending
+    if options.uncommitted
+      if pending.any?
+        STDERR.puts "There are committed upgrades that must be applied before the uncommitted ones. Run once without the --uncommitted flag first."
+        exit 1
+      end
+      pending = uncommitted
+    end
 
     if pending.any?
       if initialized
@@ -142,15 +146,17 @@ command :upgrade do |command|
         end
         Dir.chdir project_dir # in case the template changed the current directory
       end
-      FileUtils.makedirs('.autobahn')
-      File.open('.autobahn/revision', 'w') do |file|
-        file.puts revision
+      if !options.uncommitted
+        FileUtils.makedirs('.autobahn')
+        File.open('.autobahn/revision', 'w') do |file|
+          file.puts revision
+        end
+        run 'git', 'add', '.autobahn/revision'
+        autobahn_tag = Dir.chdir(autobahn_repo){capture("git describe --tags #{revision}")}
+        message = "Upgraded to autobahn #{autobahn_tag}"
+        run 'git', 'commit', '-m', message
+        puts message
       end
-      run 'git', 'add', '.autobahn/revision'
-      autobahn_tag = Dir.chdir(autobahn_repo){capture("git describe --tags #{revision}")}
-      message = "Upgraded to autobahn #{autobahn_tag}"
-      run 'git', 'commit', '-m', message
-      puts message
       if !initialized
         # We're already on the master branch. No need to merge or switch branches
       elsif options.merge and options.branch != merge_branch
@@ -162,8 +168,8 @@ command :upgrade do |command|
       end
     else
       puts "All autobahn templates have been applied."
-      unless (options.all or initialized)
-        puts "Use the --all flag if you want to apply uncommitted templates."
+      if uncommitted.any?
+        puts "Use the --uncommitted flag if you want to apply uncommitted templates."
       end
     end
   end

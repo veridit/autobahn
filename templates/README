@@ -10,4 +10,4 @@ instance methods available there.
 
 To test your template before committing it, run
 
-  autobahn --trace upgrade --all --no-merge
+  autobahn --trace upgrade --uncommitted --no-merge
