@@ -75,7 +75,7 @@ command :upgrade do |command|
   command.action do |args, options|
     initialized =  Dir.entries('.').length != 2
     options.default :force => false, :branch => "autobahn", :uncommitted => false
-    options.default :merge => (not initialized or capture("git branch").match(/^. #{options.branch}/m))
+    options.default :merge => (not initialized or not capture("git branch").match(/^. #{options.branch}/m))
     if initialized and not File.exists? "vendor/rails"
       STDERR.puts "Autobahn upgrade must be run from the top of your project directory"
       exit 1
