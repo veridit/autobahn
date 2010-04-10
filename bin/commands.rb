@@ -141,6 +141,27 @@ command :upgrade do |command|
             log 'executing',  "#{args.join(' ')} from #{Dir.pwd}" if log_action
             _run.call(*args)
           end
+
+          eval "Rails::TemplateRunner.send(:define_method, :autobahn_repo){#{autobahn_repo.inspect}}"
+
+          Rails::TemplateRunner.class_eval do
+            def skel(*paths)
+              # Copy files from the skel-directory and add them to git
+              added = []
+              while path = paths.shift
+                skel_path = File.join(autobahn_repo, 'skel', path)
+                if File.directory? skel_path
+                  Dir.entries(skel_path).reject{|p| p.match(/^\.\.?$/)}.each do |p|
+                    paths.unshift File.join(path, p)
+                  end
+                else
+                  file path, File.read(skel_path)
+                  added << path
+                end
+              end
+              run 'git', 'add', *added if added.any?
+            end
+          end
         end
         if defined? Rails
           Rails::TemplateRunner.new(template)
