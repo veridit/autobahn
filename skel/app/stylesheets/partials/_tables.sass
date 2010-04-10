@@ -1,0 +1,30 @@
+= style-table
+  padding: 0
+  border-spacing: 0 0
+  border-collapse: collapse
+  border-width: thin
+  border-style: solid
+  border-color: #4e7aaf
+
+  tbody tr th
+    background-color: #CDE6FF
+    color: inherit
+    font-weight: bold
+
+  thead tr th
+    background-color: #9CF
+    color: inherit
+    font-weight: bold
+
+  tr
+    td, th
+      border-style: solid
+      border-width: thin
+      border-color: #4e7aaf
+      empty-cells: show
+      padding: 0.3em
+      width: 5em
+
+= style-tables
+  table
+    +style-table

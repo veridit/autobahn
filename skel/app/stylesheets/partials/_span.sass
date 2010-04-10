@@ -1,0 +1,47 @@
+= container-span(!columns=!blueprint_grid_columns)
+  +span(!columns)
+  margin: 0 auto
+  +clearfix
+
+= span-offset(!n, !offset)
+  :width= !blueprint_grid_width * !n + (!blueprint_grid_margin * (!n - 1)) + !offset
+
+= span-pad(!n, !padding=!default_padding)
+  +span-offset(!n, -!padding * 2)
+  +horizontal-padding(!padding)
+
+= span-full(!n, !offset=0px)
+  +span-offset(!n, !offset + !blueprint_grid_margin)
+
+= span-full-pad(!n, !padding=!default_padding)
+  +span-full(!n, -!padding * 2)
+  +horizontal-padding(!padding)
+
+= column-offset(!n, !offset, !last=false)
+  +column-base(!last)
+  +span-offset(!n, !offset)
+
+= column-pad(!n, !padding=!default_padding)
+  +column-offset(!n, -!padding * 2)
+  +horizontal-padding(!padding)
+
+= vertical-padding(!padding)
+  :padding
+    :top= !padding
+    :bottom= !padding
+
+= horizontal-padding(!padding)
+  :padding
+    :left= !padding
+    :right= !padding
+
+= horizontal-margin(!margin)
+  :margin
+    :left= !margin
+    :right= !margin
+
+= append-margin(!n)
+  :margin-right= !blueprint_grid_outer_width * !n
+
+= prepend-margin(!n)
+  :margin-left= !blueprint_grid_outer_width * !n

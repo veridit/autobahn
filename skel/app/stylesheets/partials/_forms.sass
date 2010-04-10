@@ -1,0 +1,26 @@
+@import partials/span
+
+!form_input_horizontal_padding = 3px
+
+=form-padded-borders
+  +blueprint-form-borders
+
+  input.text, input.title, input[type=text], input[type=password], textarea
+    padding-left= !form_input_horizontal_padding
+    padding-right= !form_input_horizontal_padding
+
+=form-layout-two-columns(!left_column_width, !right_column_width)
+  +form-padded-borders
+  .field
+    +column(!left_column_width + !right_column_width, true)
+    :margin-top 0.5em
+    label
+      :display block
+      +column(!left_column_width)
+      :text-align right
+    input.text
+      :display block
+      // -2px below to compensate for borders
+      +column-offset(!right_column_width, -(2px + !form_input_horizontal_padding * 2), true)
+    input.submit
+      +prepend-margin(!left_column_width)
