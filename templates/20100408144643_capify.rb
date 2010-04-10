@@ -34,6 +34,7 @@ set :use_sudo, false
 
 set :scm_username, user
 set :repository,  "\#{scm_username}@octo.veridit.no:/home/groups/gits/\#{application}.git"
+set :git_enable_submodules, true
 
 server "octo.veridit.no", :app, :web, :db, :primary => true
 
