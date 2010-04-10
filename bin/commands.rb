@@ -136,7 +136,11 @@ command :upgrade do |command|
           require './vendor/rails/railties/lib/rails_generator/generators/applications/app/template_runner'
           # Use a double proc to work around namespace-conflicts
           _run = Proc.new{|*args| run(*args)}
-          Rails::TemplateRunner.send(:define_method, :run){|*args| _run.call(*args)}
+          Rails::TemplateRunner.send(:define_method, :run) do |*args|
+            log_action = if [true, false].member? args.last then args.pop else true end
+            log 'executing',  "#{args.join(' ')} from #{Dir.pwd}" if log_action
+            _run.call(*args)
+          end
         end
         if defined? Rails
           Rails::TemplateRunner.new(template)
