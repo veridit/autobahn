@@ -13,7 +13,7 @@ rake "gems:install GEM=compass"
 rake "gems:unpack GEM=compass"
 rake "gems:install GEM=fancy-buttons"
 rake "gems:unpack GEM=fancy-buttons"
-git :add => "vendor/gems vendor/plugins"
+git :add => "vendor/gems"
 
 # Require compass during plugin loading
 file 'vendor/plugins/compass/init.rb', <<-CODE
@@ -33,7 +33,7 @@ require 'compass-colors'
 require 'fancy-buttons'
 EOF
 
-git :add => 'config/initializers/compass.rb config/compass.rb public/images/grid.png'
+git :add => 'vendor/plugins/haml config/initializers/compass.rb config/compass.rb public/images/grid.png'
 git :commit => '-m "Configured compass"'
 
 # Clear out the compass generated stylesheets and replace them with our own
