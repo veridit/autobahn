@@ -15,6 +15,31 @@ def run(*args)
   end
 end
 
+def veridit_github_repo(repo)
+  if capture('git', 'config', 'user.email').chomp.match(/@veridit\.no$/)
+    "git@github.com:veridit/#{repo}.git" # read/write
+  else
+    "git://github.com/veridit/#{repo}.git" # read-only
+  end
+end
+
+def submodule(path, options={})
+  options[:repo] ||= veridit_github_repo(File.basename(path))
+  if File.exists? path
+    Dir.chdir path do
+      run 'git', 'fetch'
+    end
+  else
+    run 'git', 'submodule', 'add', options[:repo], path
+  end
+  if options[:commit]
+    Dir.chdir path do
+      run 'git', 'checkout', options[:commit]
+    end
+  end
+  run 'git', 'add', path
+end
+
 command :init do |command|
   command.syntax = "init [options] <directory>"
   command.description = "Initialize an autobahn project"
@@ -162,31 +187,6 @@ command :upgrade do |command|
                 end
               end
               run 'git', 'add', *added if added.any?
-            end
-
-            def veridit_github_repo(repo)
-              if capture('git', 'config', 'user.email').chomp.match(/@veridit\.no$/)
-                "git@github.com:veridit/#{repo}.git" # read/write
-              else
-                "git://github.com/veridit/#{repo}.git" # read-only
-              end
-            end
-
-            def submodule(path, options={})
-              options[:repo] ||= veridit_github_repo(File.basename(path))
-              if File.exists? path
-                Dir.chdir path do
-                  run 'git', 'fetch'
-                end
-              else
-                git :submodule => "add #{options[:repo]} #{path}"
-              end
-              if options[:commit]
-                Dir.chdir path do
-                  run 'git', 'checkout', options[:commit]
-                end
-              end
-              git :add => path
             end
           end
         end
