@@ -98,7 +98,9 @@ command :upgrade do |command|
     pending = Dir.chdir(autobahn_repo){capture("git ls-tree --name-only -r #{revision} #{templates_path}").split("\n")}.map{|p| File.basename(p)} - applied
     pending.reject!{|n| !n.match(/\.rb$/)}
     uncommitted = Dir.entries(templates_path).reject{|n| n.match(/^\.\.?$/) || !n.match(/\.rb$/)} - applied - pending
-    if options.uncommitted
+    if args.any?
+      pending = args
+    elsif options.uncommitted
       if pending.any?
         STDERR.puts "There are committed upgrades that must be applied before the uncommitted ones. Run once without the --uncommitted flag first."
         exit 1
@@ -171,7 +173,7 @@ command :upgrade do |command|
         end
         Dir.chdir project_dir # in case the template changed the current directory
       end
-      if !options.uncommitted
+      unless options.uncommitted or args.any?
         FileUtils.makedirs('.autobahn')
         File.open('.autobahn/revision', 'w') do |file|
           file.puts revision
